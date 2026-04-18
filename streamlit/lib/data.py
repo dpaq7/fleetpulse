@@ -20,18 +20,28 @@ import streamlit as st
 # ---------------------------------------------------------------------------
 
 
+def _secret(key: str) -> str | None:
+    """Fetch a credential from env var first, then st.secrets (tolerating a
+    missing secrets.toml — accessing st.secrets without one raises)."""
+    val = os.environ.get(key)
+    if val:
+        return val
+    try:
+        return st.secrets.get(key)  # type: ignore[no-any-return]
+    except Exception:
+        return None
+
+
+_REQUIRED_KEYS = ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PASSWORD")
+_ALL_KEYS = _REQUIRED_KEYS + (
+    "SNOWFLAKE_ROLE", "SNOWFLAKE_WAREHOUSE", "SNOWFLAKE_DATABASE",
+)
+
+
 def _creds() -> dict | None:
-    for key in ("SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PASSWORD"):
-        # env var first, then st.secrets
-        if not (os.environ.get(key) or st.secrets.get(key, None) if hasattr(st, "secrets") else None):
-            return None
-    return {
-        k: os.environ.get(k) or (st.secrets.get(k) if hasattr(st, "secrets") else None)
-        for k in (
-            "SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PASSWORD",
-            "SNOWFLAKE_ROLE", "SNOWFLAKE_WAREHOUSE", "SNOWFLAKE_DATABASE",
-        )
-    }
+    if not all(_secret(k) for k in _REQUIRED_KEYS):
+        return None
+    return {k: _secret(k) for k in _ALL_KEYS}
 
 
 def is_live() -> bool:
