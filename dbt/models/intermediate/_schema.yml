@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_gps_enriched
+    description: "Ephemeral: GPS pings enriched with prior-ping lag columns (speed delta, distance delta)."
+  - name: int_shipment_weather
+    description: "Ephemeral: shipments joined to closest weather observation at origin city + pickup."
+  - name: int_route_performance
+    description: "Ephemeral: per-shipment performance metrics + delay bucketing."
+  - name: int_warehouse_dwell
+    description: "Ephemeral: ARRIVAL/DEPARTURE pairs collapsed into dwell time per shipment-warehouse."

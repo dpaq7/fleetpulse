@@ -1,0 +1,9 @@
+route_id,origin_warehouse_id,dest_warehouse_id,distance_km,typical_duration_hrs
+R-001,W-TOR-01,W-MTL-01,541,6.0
+R-002,W-MIS-01,W-OTT-01,448,5.0
+R-003,W-TOR-01,W-HAM-01,68,1.0
+R-004,W-HAM-01,W-LON-01,131,1.75
+R-005,W-LON-01,W-WIN-01,193,2.25
+R-006,W-MTL-01,W-QUE-01,253,2.75
+R-007,W-MIS-01,W-MTL-01,580,6.5
+R-008,W-OTT-01,W-TOR-01,450,5.0

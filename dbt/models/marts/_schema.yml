@@ -1,0 +1,75 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Calendar dimension (2022-2027) with holiday flags."
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+
+  - name: dim_vehicle
+    description: "SCD2 — one row per vehicle version."
+    columns:
+      - name: vehicle_sk
+        data_tests: [unique, not_null]
+      - name: vehicle_id
+        data_tests: [not_null]
+      - name: is_current
+        data_tests: [not_null]
+
+  - name: dim_warehouse
+    description: "SCD2 — one row per warehouse version."
+    columns:
+      - name: warehouse_sk
+        data_tests: [unique, not_null]
+      - name: warehouse_id
+        data_tests: [not_null]
+
+  - name: dim_driver
+    description: "SCD2 driver dimension."
+    columns:
+      - name: driver_sk
+        data_tests: [unique, not_null]
+
+  - name: dim_route
+    description: "Type-1 route dimension."
+    columns:
+      - name: route_sk
+        data_tests: [unique, not_null]
+      - name: route_id
+        data_tests: [unique, not_null]
+
+  - name: fact_shipments
+    description: "Grain: one row per shipment. Clustered (pickup_date, route_id)."
+    columns:
+      - name: shipment_id
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ["DELIVERED", "DELAYED", "IN_TRANSIT", "CANCELLED"]
+      - name: vehicle_sk
+        data_tests:
+          - relationships: {to: ref('dim_vehicle'), field: vehicle_sk}
+      - name: route_sk
+        data_tests:
+          - relationships: {to: ref('dim_route'), field: route_sk}
+
+  - name: fact_gps_pings
+    description: "Grain: one row per GPS ping. Clustered (event_date, vehicle_id)."
+    columns:
+      - name: ping_id
+        data_tests: [unique, not_null]
+      - name: speed_kmh
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 150}
+
+  - name: fact_warehouse_events
+    description: "Grain: one row per warehouse event."
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: event_type
+        data_tests:
+          - accepted_values:
+              values: ["ARRIVAL", "DEPARTURE", "SCAN_IN", "SCAN_OUT"]

@@ -1,0 +1,73 @@
+version: 2
+
+sources:
+  - name: raw_gps
+    database: fleetpulse_raw
+    schema: gps
+    description: "Raw GPS telemetry from Snowpipe (JSON variant) + 5-min merged typed table."
+    tables:
+      - name: gps_events
+        description: "VARIANT payload, Snowpipe-loaded."
+        columns:
+          - name: record
+          - name: file_name
+          - name: ingest_ts
+        freshness:
+          warn_after: {count: 30, period: minute}
+          error_after: {count: 4, period: hour}
+        loaded_at_field: ingest_ts
+      - name: gps_events_typed
+        description: "Parsed + typed GPS pings, refreshed by stream+task every 5 min."
+        columns:
+          - name: ping_id
+            data_tests: [unique, not_null]
+          - name: vehicle_id
+            data_tests: [not_null]
+          - name: event_ts
+            data_tests: [not_null]
+
+  - name: raw_shipments
+    database: fleetpulse_raw
+    schema: shipments
+    tables:
+      - name: shipments
+        columns:
+          - name: shipment_id
+            data_tests: [unique, not_null]
+          - name: vehicle_id
+            data_tests: [not_null]
+          - name: pickup_ts
+            data_tests: [not_null]
+        freshness:
+          warn_after: {count: 2, period: hour}
+          error_after: {count: 24, period: hour}
+        loaded_at_field: ingest_ts
+
+  - name: raw_warehouse
+    database: fleetpulse_raw
+    schema: warehouse
+    tables:
+      - name: warehouse_events
+        columns:
+          - name: event_id
+            data_tests: [unique, not_null]
+          - name: warehouse_id
+            data_tests: [not_null]
+          - name: event_type
+            data_tests:
+              - accepted_values:
+                  values: ["ARRIVAL", "DEPARTURE", "SCAN_IN", "SCAN_OUT"]
+
+  - name: raw_weather
+    database: fleetpulse_raw
+    schema: weather
+    tables:
+      - name: weather_observations
+        columns:
+          - name: record
+      - name: weather_typed
+        columns:
+          - name: city
+            data_tests: [not_null]
+          - name: observed_ts
+            data_tests: [not_null]

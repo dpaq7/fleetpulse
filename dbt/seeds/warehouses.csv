@@ -1,0 +1,9 @@
+warehouse_id,name,city,province,lat,lng,total_docks,capacity_pallets
+W-TOR-01,Toronto DC,Toronto,ON,43.6532,-79.3832,24,2400
+W-MIS-01,Mississauga FC,Mississauga,ON,43.589,-79.6441,32,3200
+W-MTL-01,Montreal DC,Montreal,QC,45.5019,-73.5674,20,2000
+W-OTT-01,Ottawa DC,Ottawa,ON,45.4215,-75.6972,12,1200
+W-HAM-01,Hamilton XDock,Hamilton,ON,43.2557,-79.8711,16,1600
+W-LON-01,London DC,London,ON,42.9849,-81.2453,14,1400
+W-WIN-01,Windsor XDock,Windsor,ON,42.3149,-83.0364,10,1000
+W-QUE-01,Quebec City DC,Quebec City,QC,46.8139,-71.208,12,1200

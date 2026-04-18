@@ -52,3 +52,6 @@ great_expectations/uncommitted/
 
 # Claude local settings
 .claude/
+
+# Locally generated sample data (from ingest simulators)
+data/

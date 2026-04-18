@@ -38,21 +38,35 @@ See `FleetPulse_Project_Blueprint.docx` for the full design spec and `docs/archi
 # 1. Install dependencies
 make install
 
-# 2. Configure credentials
-cp .env.example .env
-# edit .env with your Snowflake + AWS + OpenWeather keys
+# 2. Run the Streamlit dashboard in demo mode (no credentials required)
+make run-dashboard
+# → open http://localhost:8501
 
-# 3. Configure dbt profile
+# 3. Generate some synthetic data locally (writes to ./data/raw/)
+python -m ingest.gps_simulator --vehicles 10 --duration-min 15 --ping-sec 5
+python -m ingest.shipment_generator --rows 5000
+python -m ingest.warehouse_event_simulator --shipments 500
+
+# 4. Run the Python test suite
+pytest
+```
+
+### Going live (requires credentials)
+
+```bash
+# 1. Configure Snowflake + AWS + OpenWeatherMap credentials
+cp .env.example .env  # edit with real values
 cp dbt/profiles.yml.example ~/.dbt/profiles.yml
 
-# 4. Run dbt build
-make build
+# 2. Provision Snowflake (scripts under snowflake/setup/)
+snowsql -f snowflake/setup/01_databases_and_schemas.sql
+# ... run 02-06 in order
 
-# 5. Launch Airflow (Docker)
+# 3. dbt seeds + snapshots + build
+cd dbt && dbt deps && dbt seed && dbt snapshot && dbt build
+
+# 4. Launch Airflow (Docker)
 make airflow-up
-
-# 6. Run the dashboard
-make run-dashboard
 ```
 
 ## Roadmap

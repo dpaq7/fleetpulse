@@ -1,0 +1,18 @@
+{
+  "suite_name": "fact_shipments",
+  "target": "fleetpulse_marts.marts.fact_shipments",
+  "expectations": [
+    {"type": "expect_table_row_count_to_be_between", "kwargs": {"min_value": 1}},
+    {"type": "expect_column_values_to_be_unique", "kwargs": {"column": "shipment_id"}},
+    {"type": "expect_column_values_to_not_be_null", "kwargs": {"column": "shipment_id"}},
+    {"type": "expect_column_values_to_not_be_null", "kwargs": {"column": "pickup_ts"}},
+    {"type": "expect_column_values_to_be_in_set",
+     "kwargs": {"column": "status", "value_set": ["DELIVERED", "DELAYED", "IN_TRANSIT", "CANCELLED"]}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "weight_kg", "min_value": 0, "max_value": 50000}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "delay_minutes", "min_value": -240, "max_value": 1440, "mostly": 0.99}},
+    {"type": "expect_column_mean_to_be_between",
+     "kwargs": {"column": "duration_hrs", "min_value": 0.5, "max_value": 10.0}}
+  ]
+}

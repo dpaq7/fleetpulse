@@ -1,0 +1,52 @@
+version: 2
+
+seeds:
+  - name: warehouses
+    description: "Static dimension — warehouse locations with geography + capacity."
+    columns:
+      - name: warehouse_id
+        data_tests: [unique, not_null]
+      - name: city
+        data_tests: [not_null]
+      - name: lat
+      - name: lng
+
+  - name: routes
+    description: "Origin/destination pairs with typical distance + duration."
+    columns:
+      - name: route_id
+        data_tests: [unique, not_null]
+      - name: origin_warehouse_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('warehouses')
+              field: warehouse_id
+      - name: dest_warehouse_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('warehouses')
+              field: warehouse_id
+
+  - name: vehicles
+    description: "Fleet roster (initial state; SCD2 via snapshot)."
+    columns:
+      - name: vehicle_id
+        data_tests: [unique, not_null]
+      - name: fuel_type
+        data_tests:
+          - accepted_values:
+              values: ["DIESEL", "ELECTRIC", "CNG", "HYBRID"]
+
+  - name: drivers
+    columns:
+      - name: driver_id
+        data_tests: [unique, not_null]
+
+  - name: holidays
+    description: "Canadian public holidays for dim_date."
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: country

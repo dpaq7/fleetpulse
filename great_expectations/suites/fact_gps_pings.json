@@ -1,0 +1,16 @@
+{
+  "suite_name": "fact_gps_pings",
+  "target": "fleetpulse_marts.marts.fact_gps_pings",
+  "expectations": [
+    {"type": "expect_column_values_to_be_unique",   "kwargs": {"column": "ping_id"}},
+    {"type": "expect_column_values_to_not_be_null", "kwargs": {"column": "event_ts"}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "latitude",  "min_value": -90,  "max_value": 90}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "longitude", "min_value": -180, "max_value": 180}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "speed_kmh", "min_value": 0, "max_value": 150, "mostly": 0.999}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "fuel_level_pct", "min_value": 0, "max_value": 100}}
+  ]
+}

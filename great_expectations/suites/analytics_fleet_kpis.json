@@ -1,0 +1,13 @@
+{
+  "suite_name": "analytics_fleet_kpis",
+  "target": "fleetpulse_marts.analytics.analytics_fleet_kpis",
+  "expectations": [
+    {"type": "expect_column_values_to_be_unique", "kwargs": {"column": "activity_date"}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "on_time_pct", "min_value": 0, "max_value": 100}},
+    {"type": "expect_column_values_to_be_between",
+     "kwargs": {"column": "total_shipments", "min_value": 0}},
+    {"type": "expect_column_max_to_be_between",
+     "kwargs": {"column": "activity_date", "max_value": {"$today": true}}}
+  ]
+}

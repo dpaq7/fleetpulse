@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: stg_gps_events
+    description: "Typed, de-duplicated GPS pings. One row per ping_id."
+    columns:
+      - name: ping_id
+        data_tests: [unique, not_null]
+      - name: vehicle_id
+        data_tests: [not_null]
+      - name: event_ts
+        data_tests: [not_null]
+      - name: latitude
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: -90,  max_value: 90}
+      - name: longitude
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: -180, max_value: 180}
+      - name: speed_kmh
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 150}
+
+  - name: stg_shipments
+    description: "One row per shipment with derived delay + duration."
+    columns:
+      - name: shipment_id
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ["DELIVERED", "DELAYED", "IN_TRANSIT", "CANCELLED"]
+      - name: pickup_ts
+        data_tests: [not_null]
+      - name: weight_kg
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 50000}
+
+  - name: stg_warehouse_events
+    description: "Typed warehouse dock events."
+    columns:
+      - name: event_id
+        data_tests: [unique, not_null]
+      - name: event_type
+        data_tests:
+          - accepted_values:
+              values: ["ARRIVAL", "DEPARTURE", "SCAN_IN", "SCAN_OUT"]
+
+  - name: stg_weather
+    description: "Latest-per-city+observed_ts weather."
+    columns:
+      - name: city
+        data_tests: [not_null]
+      - name: observed_ts
+        data_tests: [not_null]
+      - name: temp_c
+        data_tests:
+          - dbt_utils.accepted_range: {min_value: -60, max_value: 55}

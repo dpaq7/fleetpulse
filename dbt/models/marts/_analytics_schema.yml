@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: analytics_fleet_kpis
+    description: "Daily fleet-level KPIs for the dashboard home page."
+  - name: analytics_route_performance
+    description: "90-day per-route summary with wet/dry duration split."
+  - name: analytics_warehouse_utilization
+    description: "30-day per-warehouse utilization + avg dwell."
+  - name: analytics_gps_speed_anomalies
+    description: "7-day anomaly candidates (overspeed, harsh accel, low fuel)."
