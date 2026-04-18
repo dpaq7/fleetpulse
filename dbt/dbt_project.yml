@@ -1,0 +1,39 @@
+name: fleetpulse
+version: 0.1.0
+config-version: 2
+
+profile: fleetpulse
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+
+target-path: target
+clean-targets:
+  - target
+  - dbt_packages
+  - logs
+
+require-dbt-version: ">=1.8.0"
+
+models:
+  fleetpulse:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: ephemeral
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  fleetpulse:
+    +schema: seeds
+    +quote_columns: false
+
+vars:
+  timezone: "America/Toronto"
