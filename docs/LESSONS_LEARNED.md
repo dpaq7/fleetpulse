@@ -1,24 +1,36 @@
 # Lessons Learned
 
 > Running log of surprises, trade-offs, and takeaways from building FleetPulse.
-> Populate as the project progresses.
 
 ## Phase 1 — Snowflake foundations + ingestion
 
-_TBD_
+- **A pluggable writer paid for itself immediately.** [`ingest/utils.py`](../ingest/utils.py) defines a `Writer` protocol with `LocalWriter` and `S3Writer` implementations, selected at runtime via `FLEETPULSE_WRITER`. The original plan was to start straight against S3, but doing so would have blocked all four generators (`gps_simulator`, `weather_loader`, `shipment_generator`, `warehouse_event_simulator`) on AWS access. Local-first development meant the simulators were testable from day one, and the S3 path is a one-line env-var flip.
+- **Snowpipe vs. bulk COPY split fell out of the data shape.** GPS pings and weather observations are JSON with variable structure — land them as `VARIANT` via Snowpipe ([`snowflake/snowpipe/`](../snowflake/snowpipe/)). Shipments and warehouse events are tabular — push them through Airflow's daily `COPY INTO` ([`airflow/dags/fleetpulse_daily.py`](../airflow/dags/fleetpulse_daily.py)). Trying to force everything through one pattern wasted time before this split clicked.
+- **OpenWeatherMap free tier capped us at 60 calls/min, ~1,000/day.** [`ingest/weather_loader.py`](../ingest/weather_loader.py) polls hourly across a fixed warehouse list to stay well under the limit. Polling per-shipment-pickup would have blown the cap on day one — the join to weather happens *downstream* in [`int_shipment_weather`](../dbt/models/intermediate/int_shipment_weather.sql) instead.
+- **S3 key partitioning matters before there's any data.** The `dt=YYYY-MM-DD/hh=HH/` layout from `partition_key()` lets Snowpipe scale and lets future Airflow tasks bound their `COPY INTO` by date prefix without scanning the whole bucket. Cheap to add upfront, painful to retrofit.
 
 ## Phase 2 — dbt star schema
 
-_TBD_
+- **Ephemeral intermediates kept the warehouse uncluttered.** [`dbt/models/intermediate/`](../dbt/models/intermediate/) holds four CTE-style transforms (`int_gps_enriched`, `int_shipment_weather`, `int_route_performance`, `int_warehouse_dwell`) materialized as `ephemeral` per [`dbt_project.yml`](../dbt/dbt_project.yml). No physical tables or views land in Snowflake for these — they inline as CTEs into the marts that reference them. Result: marts schema only contains things a dashboard actually reads.
+- **Incremental + merge + clustering is the right combo for facts.** [`fact_shipments.sql`](../dbt/models/marts/fact_shipments.sql) and [`fact_gps_pings.sql`](../dbt/models/marts/fact_gps_pings.sql) materialize incremental with `incremental_strategy='merge'` and cluster on the dashboard's filter columns (`pickup_date + route_id` for shipments, `event_date + vehicle_id` for pings). The 1-day overlap window in the `is_incremental()` block (`dateadd(day, -1, max(pickup_ts))`) absorbs late-arriving rows without forcing full rebuilds.
+- **dbt snapshots beat hand-rolled SCD2.** Drivers/vehicles/warehouses get the full type-2 history via [`dbt/snapshots/`](../dbt/snapshots/) using `check` strategy. Initially tempted to MERGE manually with `valid_from`/`valid_to` in the dim model — switching to snapshots cut a layer of moving parts and made history reproducible.
+- **Dimension `is_current` flag everywhere downstream.** Every fact-to-dim join in [`fact_shipments`](../dbt/models/marts/fact_shipments.sql) uses `and {dim}.is_current` to grab the active SCD2 row. Cleaner than threading an `as-of` timestamp through every join, and matches how the dashboard actually queries.
 
 ## Phase 3 — Data quality + CI/CD
 
-_TBD_
+- **Two test layers, two responsibilities.** dbt tests (in [`dbt/tests/`](../dbt/tests/) plus the YAML schema tests) cover relational invariants — uniqueness, not-null, referential integrity, valid-coordinate ranges, delivery-after-pickup. Great Expectations suites in [`great_expectations/suites/`](../great_expectations/suites/) cover distributional checks — column ranges, expected nullability rates, value sets. Trying to express "% of rows with on-time delivery is between 60% and 100%" as a dbt test was awkward; trying to express RI in GE was awkward. They split cleanly along that line.
+- **`sqlfluff` + pre-commit catches things CI shouldn't have to.** [`.pre-commit-config.yaml`](../.pre-commit-config.yaml) runs sqlfluff and ruff on every commit. CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) re-runs them as a safety net but the local hook is what keeps PRs clean. The `sqlfluff-templater-dbt` plugin is the bit that makes sqlfluff understand `{{ ref(...) }}` instead of complaining about jinja.
+- **`ENABLE_DBT_CI` repo variable gates the warehouse-touching CI job.** Without it, the `dbt-build` job is skipped — important so a portfolio fork without Snowflake credentials still gets green lint + pytest checks.
 
 ## Phase 4 — Real-time + dashboard
 
-_TBD_
+- **Streams + Tasks for sub-15-min CDC, dbt for batch.** Running `dbt build` every 5 minutes would have hammered the trial credits and wedged on long-running incremental runs. Instead, [`snowflake/streams_tasks/gps_stream_and_task.sql`](../snowflake/streams_tasks/gps_stream_and_task.sql) keeps a typed `gps_events_typed` table within ~5 minutes of raw via a Snowflake-native MERGE task that only fires `when system$stream_has_data(...)`. dbt's incremental marts then read from the typed table on the daily cadence. Two cadences, two engines, one direction of data flow.
+- **`when system$stream_has_data` is the cost-saver.** Without it, the task would spin up `INGEST_WH` every 5 minutes whether anything had arrived or not. With it, idle periods cost zero credits.
+- **Demo-mode fallback is what makes the dashboard reviewable.** [`streamlit/lib/data.py`](../streamlit/lib/data.py) wraps every public accessor (`get_fleet_kpis`, `get_route_performance`, `get_warehouse_utilization`, `get_anomalies`) in an `if is_live(): … else: … (mock)` switch. Mocks are seeded with `random.Random(42)` so successive page loads show identical data — important so a reviewer doesn't see flickering numbers on every re-render.
+- **Streamlit secrets without `secrets.toml` raises.** Initial release crashed on `st.secrets.get(...)` when no `.streamlit/secrets.toml` existed (a normal state for a freshly cloned repo). Fixed in `135efe6` by wrapping the access in a try/except — the only way Streamlit lets you ask "do I have secrets?" without provoking the exception.
 
 ## Phase 5 — Portfolio polish
 
-_TBD_
+- **Building credential-free forced better abstractions.** Every infrastructure boundary (S3 writer, Snowflake connection, Streamlit secrets) ended up with a clean fallback because there was no other way to develop. The same shape works for production: prod gets credentials, demos don't, and nothing in the code path branches on environment beyond the boundary itself.
+- **Documenting decisions before they fade is cheap insurance.** ADRs 0002–0005 capture the four design choices that are non-obvious from reading the code (Streams+Tasks split, ephemeral intermediates, pluggable writer, demo-mode fallback). Three months from now, the *why* of each would be rediscovered through guesswork without these notes.
+- **Phase 5 deferred items are deliberate, not slipping.** Live `dbt docs generate`, Streamlit Community Cloud deployment, and end-to-end Airflow runs all require credentials that aren't in scope for this portfolio cut. They're listed in the README under a "Deferred — requires credentials" subsection so a reviewer doesn't read absence as oversight.
