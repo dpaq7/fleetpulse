@@ -13,15 +13,15 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+import pandas as pd
+import streamlit as st
+
 # Streamlit only puts the script's directory on sys.path. The demo-mode mocks
 # read reference data (ROUTES, WAREHOUSES, VEHICLES) from `ingest.reference_data`
 # which lives at the project root, so we add it here.
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
-
-import pandas as pd
-import streamlit as st
 
 
 # ---------------------------------------------------------------------------
