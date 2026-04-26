@@ -19,7 +19,7 @@ jobs:
           python-version: "3.11"
           cache: pip
       - name: Install lint dependencies
-        run: pip install -r requirements.txt ruff==0.7.* sqlfluff==3.2.* sqlfluff-templater-dbt==3.2.*
+        run: pip install dbt-core==1.8.* dbt-snowflake==1.8.* ruff==0.7.* sqlfluff==3.2.* sqlfluff-templater-dbt==3.2.*
       - name: dbt deps
         working-directory: dbt
         run: dbt deps
@@ -43,7 +43,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install dbt-core==1.8.* dbt-snowflake==1.8.*
       - name: dbt deps
         working-directory: dbt
         run: dbt deps
@@ -91,5 +91,5 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -r requirements.txt pytest==8.3.*
+      - run: pip install pytest==8.3.*
       - run: pytest tests/ -v
