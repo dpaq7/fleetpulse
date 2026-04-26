@@ -51,7 +51,7 @@ jobs:
         run: cp dbt/profiles.yml.demo dbt/profiles.yml
       - name: dbt parse
         working-directory: dbt
-        run: dbt parse --profile fleetpulse
+        run: dbt parse --profiles-dir . --profile fleetpulse
 
   dbt-build:
     name: dbt build + test
