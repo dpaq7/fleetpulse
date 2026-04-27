@@ -1,0 +1,21 @@
+# Dummy profile used by `dbt parse` for project-structure validation without a
+# live warehouse. Never actually connects — all values are stubs. Activate with:
+#
+#   DBT_PROFILES_DIR=./dbt dbt parse --profiles-dir ./dbt --profile fleetpulse
+#
+# or symlink/copy this file to ~/.dbt/profiles.yml when you just want to
+# validate the manifest compiles cleanly.
+fleetpulse:
+  target: demo
+  outputs:
+    demo:
+      type: snowflake
+      account: stub-account
+      user: stub-user
+      password: stub-password
+      role: FLEETPULSE_DEV_ROLE
+      warehouse: TRANSFORM_WH
+      database: FLEETPULSE_DEMO
+      schema: DEMO
+      threads: 1
+      client_session_keep_alive: false

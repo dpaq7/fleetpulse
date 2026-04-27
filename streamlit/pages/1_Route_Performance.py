@@ -30,9 +30,9 @@ with col2:
 st.subheader("Wet vs. dry duration")
 melt = df.melt(id_vars=["route_id"],
                value_vars=["avg_duration_wet", "avg_duration_dry"],
-               var_name="condition", value_name="avg_duration_hrs")
+               var_name="condition", value_name="duration_hrs")
 st.plotly_chart(
-    px.bar(melt, x="route_id", y="avg_duration_hrs", color="condition", barmode="group"),
+    px.bar(melt, x="route_id", y="duration_hrs", color="condition", barmode="group"),
     use_container_width=True,
 )
 
