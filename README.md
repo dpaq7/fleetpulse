@@ -10,6 +10,14 @@
 
 FleetPulse is a portfolio-grade data engineering project that simulates a production logistics analytics system. It ingests GPS telemetry, shipment records, weather, and warehouse IoT signals, processes them through a Snowflake-based analytics warehouse, and delivers insights via a live Streamlit dashboard.
 
+## Recruiter Summary
+
+FleetPulse demonstrates analytics engineering and data platform skills across the warehouse-to-dashboard lifecycle: synthetic event generation, Snowflake ingestion design, dbt dimensional modeling, data quality checks, Airflow orchestration stubs, and a Streamlit dashboard with a credential-free demo mode.
+
+## Problem
+
+Fleet operations teams need timely visibility into shipment delays, vehicle movement, warehouse utilization, and anomaly alerts. This project models how GPS, shipment, weather, and warehouse-event data could move through a cloud analytics stack into stakeholder-facing KPIs and dashboards. The public portfolio version uses deterministic synthetic data and demo-mode fallbacks so reviewers can inspect the system without Snowflake, AWS, or OpenWeather credentials.
+
 ## Architecture
 
 ```
@@ -52,7 +60,7 @@ The Streamlit app runs end-to-end without credentials in **demo mode**, backed b
 | CI/CD          | GitHub Actions                      |
 | Language       | Python 3.11 + SQL                   |
 
-## Quickstart
+## Reproducible Quickstart
 
 ```bash
 # 1. Install dependencies
@@ -92,8 +100,8 @@ make airflow-up
 ## Roadmap
 
 - ✅ **Phase 1 (Weeks 1-2):** Snowflake foundations, Snowpipe, Python loaders, weather API
-- ✅ **Phase 2 (Weeks 3-4):** dbt star schema (20+ models), clustering, optimization
-- ✅ **Phase 3 (Week 5):** Data quality (60+ tests), GitHub Actions, pre-commit hooks
+- ✅ **Phase 2 (Weeks 3-4):** dbt star schema with 20 committed SQL models, clustering, optimization
+- ✅ **Phase 3 (Week 5):** Data quality checks with dbt tests and Great Expectations suites, GitHub Actions, pre-commit hooks
 - ✅ **Phase 4 (Week 6):** Streams + Tasks, Streamlit multi-page dashboard
 - ✅ **Phase 5 (Week 7):** Documentation, ADRs, portfolio polish — `LESSONS_LEARNED.md`, ADRs 0002-0005, dashboard screenshots, dbt parse stub
 
@@ -106,12 +114,34 @@ These are intentionally out of scope for the offline portfolio cut and become po
 - Streamlit Community Cloud deployment with a public URL
 - DuckDB demo-mode migration as a post-trial fallback (see [docs/COST_ANALYSIS.md](docs/COST_ANALYSIS.md))
 
+## Metrics and Results
+
+Committed evidence in this repo:
+
+- 20 dbt SQL models across staging, intermediate, and marts.
+- 4 Python ingestion/simulation modules for GPS, shipments, weather, and warehouse events.
+- 4 Streamlit dashboard screenshots captured from the demo dataset.
+- 5 Python test modules covering simulator and reference-data behavior.
+- Great Expectations suites for fleet KPI, shipment, and GPS-ping data quality.
+- CI covering Python linting, pytest, dbt parse, and optional credential-gated dbt build.
+
+No live Snowflake performance benchmark is claimed in the public repo because live warehouse credentials are intentionally not included.
+
 ## Documentation
 
 - [Architecture overview](docs/architecture.md) — data flow, star schema, materialization strategy
 - [Cost analysis](docs/COST_ANALYSIS.md) — free-tier breakdown and post-trial options
 - [Lessons learned](docs/LESSONS_LEARNED.md) — phase-by-phase retrospective
 - [Architecture Decision Records](docs/ADR/) — design choices and trade-offs
+- [Resume alignment](docs/resume_alignment.md) — role targeting, skills, bullets, talking points
+
+## Limitations
+
+- Public runs use deterministic demo data unless Snowflake, AWS, and OpenWeather credentials are configured.
+- The optional end-to-end live warehouse build is gated behind repository variables and secrets.
+- Dashboard screenshots show demo-mode behavior, not a production fleet deployment.
+- Streamlit Community Cloud deployment and live dbt docs hosting are deferred.
+- The project is an analytics engineering portfolio project, not a production logistics product.
 
 ## License
 

@@ -93,3 +93,11 @@ jobs:
           cache: pip
       - run: pip install pytest==8.3.*
       - run: pytest tests/ -v
+      - name: Check portfolio docs and screenshots
+        run: |
+          test -f README.md
+          test -f docs/resume_alignment.md
+          test -f docs/screenshots/01_fleet_kpis.png
+          test -f docs/screenshots/02_route_performance.png
+          test -f docs/screenshots/03_warehouse_utilization.png
+          test -f docs/screenshots/04_anomaly_alerts.png
